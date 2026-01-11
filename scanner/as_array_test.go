@@ -65,7 +65,7 @@ func TestAsArray(t *testing.T) {
 					return
 				}
 				for index, item := range tc.Out {
-					if v := out[index]; bytes.Compare(v, []byte(item)) != 0 {
+					if v := out[index]; !bytes.Equal(v, []byte(item)) {
 						t.Errorf("expected content at index %v to match; want %v, got %v", index, item, string(v))
 						return
 					}
