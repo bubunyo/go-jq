@@ -1,3 +1,2 @@
-// Package scanner provides various utilities for parsing and extracting json data from []byte
-
+// Package scanner provides low-level JSON parsing utilities for the jq package.
 package scanner
