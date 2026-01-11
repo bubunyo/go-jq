@@ -72,6 +72,11 @@ func TestParse(t *testing.T) {
 			Op:       ".def.[1:2]",
 			Expected: `["b","c"]`,
 		},
+		"deeply nested object": {
+			In:       `{"hello":{"world":{"object":"ewogICAgICAgICJmaXJzdCI6ICJqb2UiCiAgICAgIH0="}}}`,
+			Op:       ".hello.world.object|b64_decode|.first",
+			Expected: `"joe"`,
+		},
 	}
 
 	for label, tc := range testCases {
