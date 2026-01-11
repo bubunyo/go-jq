@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/bubunyo/jq"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse(t *testing.T) {
@@ -144,24 +146,16 @@ func TestParse(t *testing.T) {
 				}
 				// Parse succeeded, check if Apply fails
 				_, err = op.Apply([]byte(tc.In))
-				if err == nil {
-					t.FailNow()
-				}
+				assert.Error(t, err, "Expected an error but got none")
 				return
 			}
 
 			// For non-error cases, Parse should succeed
-			if err != nil {
-				t.FailNow()
-			}
+			require.NoError(t, err, "Parse should not return an error")
 
 			data, err := op.Apply([]byte(tc.In))
-			if string(data) != tc.Expected {
-				t.FailNow()
-			}
-			if err != nil {
-				t.FailNow()
-			}
+			require.NoError(t, err, "Apply should not return an error")
+			assert.Equal(t, tc.Expected, string(data))
 		})
 	}
 }
@@ -191,21 +185,8 @@ func TestFindIndices(t *testing.T) {
 	for label, tc := range testCases {
 		t.Run(label, func(t *testing.T) {
 			matches := jq.FindIndices(tc.In)
-			t.Logf("%#v", matches[0])
-			if len(matches) == 0 {
-				t.Log("no matches")
-				t.FailNow()
-			}
-			if len(matches[0]) != len(tc.Expect) {
-				t.Log("count mismatch")
-				t.FailNow()
-			}
-			for k, v := range tc.Expect {
-				if v != matches[0][k] {
-					t.Log("expected mismatch")
-					t.FailNow()
-				}
-			}
+			require.NotEmpty(t, matches, "Expected at least one match")
+			assert.Equal(t, tc.Expect, matches[0])
 		})
 	}
 }

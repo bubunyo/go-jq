@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/bubunyo/jq"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkChain(t *testing.B) {
@@ -26,10 +28,7 @@ func BenchmarkChain(t *testing.B) {
 
 	for i := 0; i < t.N; i++ {
 		_, err := op.Apply(data)
-		if err != nil {
-			t.FailNow()
-			return
-		}
+		require.NoError(t, err)
 	}
 }
 
@@ -56,16 +55,10 @@ func TestChain(t *testing.T) {
 		t.Run(label, func(t *testing.T) {
 			data, err := tc.Op.Apply([]byte(tc.In))
 			if tc.HasError {
-				if err == nil {
-					t.FailNow()
-				}
+				assert.Error(t, err)
 			} else {
-				if string(data) != tc.Expected {
-					t.FailNow()
-				}
-				if err != nil {
-					t.FailNow()
-				}
+				require.NoError(t, err)
+				assert.Equal(t, tc.Expected, string(data))
 			}
 		})
 	}

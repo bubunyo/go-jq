@@ -16,6 +16,9 @@ package jq
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegexp(t *testing.T) {
@@ -58,18 +61,10 @@ func TestRegexp(t *testing.T) {
 	for label, tc := range testCases {
 		t.Run(label, func(t *testing.T) {
 			matches := reArray.FindAllStringSubmatch(tc.In, -1)
-			if len(matches) != 1 {
-				t.FailNow()
-			}
-			if len(matches[0]) != 4 {
-				t.FailNow()
-			}
-			if matches[0][1] != tc.From {
-				t.FailNow()
-			}
-			if matches[0][3] != tc.To {
-				t.FailNow()
-			}
+			require.Len(t, matches, 1, "Should have exactly one match")
+			require.Len(t, matches[0], 4, "Match should have 4 capture groups")
+			assert.Equal(t, tc.From, matches[0][1], "From value should match")
+			assert.Equal(t, tc.To, matches[0][3], "To value should match")
 		})
 	}
 }
