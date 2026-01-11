@@ -17,7 +17,7 @@ package scanner_test
 import (
 	"testing"
 
-	"github.com/savaki/jq/scanner"
+	"github.com/bubunyo/jq/scanner"
 )
 
 func BenchmarkObject(t *testing.B) {

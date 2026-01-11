@@ -18,7 +18,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/savaki/jq/scanner"
+	"github.com/bubunyo/jq/scanner"
 )
 
 func BenchmarkString(t *testing.B) {

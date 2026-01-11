@@ -17,7 +17,7 @@ package jq_test
 import (
 	"testing"
 
-	"github.com/savaki/jq"
+	"github.com/bubunyo/jq"
 )
 
 func BenchmarkDot(t *testing.B) {
