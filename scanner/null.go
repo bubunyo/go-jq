@@ -9,7 +9,6 @@ func Null(in []byte, pos int) (int, error) {
 	switch in[pos] {
 	case 'n':
 		return expect(in, pos, n...)
-		return pos + 4, nil
 	default:
 		return 0, errUnexpectedValue
 	}

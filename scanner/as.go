@@ -24,7 +24,7 @@ func AsArray(in []byte, pos int) ([][]byte, error) {
 
 	// 1. Count the number of elements in the array
 
-	start := pos
+	var start int
 
 	elements := make([][]byte, 0, 256)
 	for {
