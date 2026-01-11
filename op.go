@@ -1,23 +1,12 @@
-// Copyright (c) 2016 Matt Ho <matt.ho@gmail.com>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package jq
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
 	"strings"
 
-	"github.com/savaki/jq/scanner"
+	"github.com/bubunyo/jq/scanner"
 )
 
 // Op defines a single transformation to be applied to a []byte
@@ -93,5 +82,30 @@ func From(from int) OpFunc {
 func To(to int) OpFunc {
 	return func(in []byte) ([]byte, error) {
 		return scanner.FindTo(in, 0, to)
+	}
+}
+
+// B64Decode decodes a base64-encoded JSON string value
+func B64Decode() OpFunc {
+	return func(in []byte) ([]byte, error) {
+		// Remove leading/trailing whitespace
+		in = bytes.TrimSpace(in)
+
+		// Check if input is a quoted JSON string
+		if len(in) < 2 || in[0] != '"' || in[len(in)-1] != '"' {
+			return nil, fmt.Errorf("b64_decode expects a JSON string")
+		}
+
+		// Extract the string content (without quotes)
+		encoded := in[1 : len(in)-1]
+
+		// Decode base64
+		decoded, err := base64.StdEncoding.DecodeString(string(encoded))
+		if err != nil {
+			return nil, fmt.Errorf("b64_decode failed: %v", err)
+		}
+
+		// Return decoded bytes (should be valid JSON)
+		return decoded, nil
 	}
 }

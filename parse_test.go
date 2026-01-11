@@ -1,23 +1,11 @@
-// Copyright (c) 2016 Matt Ho <matt.ho@gmail.com>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package jq_test
 
 import (
 	"testing"
 
-	"github.com/savaki/jq"
+	"github.com/bubunyo/jq"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse(t *testing.T) {
@@ -72,72 +60,119 @@ func TestParse(t *testing.T) {
 			Op:       ".def.[1:2]",
 			Expected: `["b","c"]`,
 		},
+
+		// Pipe operator tests
+		"pipe with dots": {
+			In:       `{"a":{"b":"value"}}`,
+			Op:       ".a|.b",
+			Expected: `"value"`,
+		},
+		"multiple pipes": {
+			In:       `{"a":{"b":{"c":"nested"}}}`,
+			Op:       ".a|.b|.c",
+			Expected: `"nested"`,
+		},
+		"pipe with array index": {
+			In:       `[{"name":"alice"},{"name":"bob"}]`,
+			Op:       ".[1]|.name",
+			Expected: `"bob"`,
+		},
+		"pipe array operations": {
+			In:       `[["a","b","c"],["d","e","f"]]`,
+			Op:       ".[0]|.[1]",
+			Expected: `"b"`,
+		},
+		"pipe with range": {
+			In:       `{"items":["a","b","c","d"]}`,
+			Op:       ".items|.[1:2]",
+			Expected: `["b","c"]`,
+		},
+		"pipe mixed operations": {
+			In:       `{"users":[{"id":1},{"id":2}]}`,
+			Op:       ".users|.[0]|.id",
+			Expected: `1`,
+		},
+		"pipe with from": {
+			In:       `[{"a":1},{"a":2},{"a":3}]`,
+			Op:       ".[1:]|.[0]|.a",
+			Expected: `2`,
+		},
+		"pipe with b64_decode": {
+			In:       `{"hello":{"world":{"object":"ewogICAgICAgICJmaXJzdCI6ICJqb2UiCiAgICAgIH0="}}}`,
+			Op:       ".hello.world.object|b64_decode|.first",
+			Expected: `"joe"`,
+		},
+
+		// Error cases
+		"empty pipe segment": {
+			In:       `{"a":"value"}`,
+			Op:       ".a||.b",
+			HasError: true,
+		},
+		"pipe at start": {
+			In:       `{"a":"value"}`,
+			Op:       "|.a",
+			HasError: true,
+		},
+		"pipe at end": {
+			In:       `{"a":"value"}`,
+			Op:       ".a|",
+			HasError: true,
+		},
 	}
 
 	for label, tc := range testCases {
 		t.Run(label, func(t *testing.T) {
 			op, err := jq.Parse(tc.Op)
-			if err != nil {
-				t.FailNow()
+			if tc.HasError {
+				// For error cases, we expect either Parse to fail or Apply to fail
+				if err != nil {
+					// Parse failed as expected
+					return
+				}
+				// Parse succeeded, check if Apply fails
+				_, err = op.Apply([]byte(tc.In))
+				assert.Error(t, err, "Expected an error but got none")
+				return
 			}
 
+			// For non-error cases, Parse should succeed
+			require.NoError(t, err, "Parse should not return an error")
+
 			data, err := op.Apply([]byte(tc.In))
-			if tc.HasError {
-				if err == nil {
-					t.FailNow()
-				}
-			} else {
-				if string(data) != tc.Expected {
-					t.FailNow()
-				}
-				if err != nil {
-					t.FailNow()
-				}
-			}
+			require.NoError(t, err, "Apply should not return an error")
+			assert.Equal(t, tc.Expected, string(data))
 		})
 	}
 }
 
-//func TestFindIndices(t *testing.T) {
-//	testCases := map[string]struct {
-//		In     string
-//		Expect []string
-//	}{
-//		"simple": {
-//			In:     "[0]",
-//			Expect: []string{"0"},
-//		},
-//		"range": {
-//			In:     "[0:1]",
-//			Expect: []string{"0"},
-//		},
-//		"from": {
-//			In:     "[1:]",
-//			Expect: []string{"0"},
-//		},
-//		"to": {
-//			In:     "[:1]",
-//			Expect: []string{"0"},
-//		},
-//	}
-//	for label, tc := range testCases {
-//		t.Run(label, func(t *testing.T) {
-//			matches := jq.FindIndices(tc.In)
-//			t.Logf("%#v", matches[0])
-//			if len(matches) == 0 {
-//				t.Log("no matches")
-//				t.FailNow()
-//			}
-//			if len(matches[0]) != len(tc.Expect) {
-//				t.Log("count mismatch")
-//				t.FailNow()
-//			}
-//			for k, v := range tc.Expect {
-//				if v != matches[0][k] {
-//					t.Log("expected mismatch")
-//					t.FailNow()
-//				}
-//			}
-//		})
-//	}
-//}
+func TestFindIndices(t *testing.T) {
+	testCases := map[string]struct {
+		In     string
+		Expect []string
+	}{
+		"simple": {
+			In:     "[0]",
+			Expect: []string{"[0]", "0", "", ""},
+		},
+		"range": {
+			In:     "[0:1]",
+			Expect: []string{"[0:1]", "0", ":", "1"},
+		},
+		"from": {
+			In:     "[1:]",
+			Expect: []string{"[1:]", "1", ":", ""},
+		},
+		"to": {
+			In:     "[:1]",
+			Expect: []string{"[:1]", "", ":", "1"},
+		},
+	}
+	for label, tc := range testCases {
+		t.Run(label, func(t *testing.T) {
+			matches := jq.FindIndices(tc.In)
+			require.NotEmpty(t, matches, "Expected at least one match")
+			assert.Equal(t, tc.Expect, matches[0])
+		})
+	}
+}
