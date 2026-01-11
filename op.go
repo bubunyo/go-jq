@@ -15,6 +15,9 @@
 package jq
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
 	"strings"
 
 	"github.com/bubunyo/jq/scanner"
@@ -93,5 +96,30 @@ func From(from int) OpFunc {
 func To(to int) OpFunc {
 	return func(in []byte) ([]byte, error) {
 		return scanner.FindTo(in, 0, to)
+	}
+}
+
+// B64Decode decodes a base64-encoded JSON string value
+func B64Decode() OpFunc {
+	return func(in []byte) ([]byte, error) {
+		// Remove leading/trailing whitespace
+		in = bytes.TrimSpace(in)
+
+		// Check if input is a quoted JSON string
+		if len(in) < 2 || in[0] != '"' || in[len(in)-1] != '"' {
+			return nil, fmt.Errorf("b64_decode expects a JSON string")
+		}
+
+		// Extract the string content (without quotes)
+		encoded := in[1 : len(in)-1]
+
+		// Decode base64
+		decoded, err := base64.StdEncoding.DecodeString(string(encoded))
+		if err != nil {
+			return nil, fmt.Errorf("b64_decode failed: %v", err)
+		}
+
+		// Return decoded bytes (should be valid JSON)
+		return decoded, nil
 	}
 }

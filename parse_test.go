@@ -72,32 +72,95 @@ func TestParse(t *testing.T) {
 			Op:       ".def.[1:2]",
 			Expected: `["b","c"]`,
 		},
-		"deeply nested object": {
+
+		// Pipe operator tests
+		"pipe with dots": {
+			In:       `{"a":{"b":"value"}}`,
+			Op:       ".a|.b",
+			Expected: `"value"`,
+		},
+		"multiple pipes": {
+			In:       `{"a":{"b":{"c":"nested"}}}`,
+			Op:       ".a|.b|.c",
+			Expected: `"nested"`,
+		},
+		"pipe with array index": {
+			In:       `[{"name":"alice"},{"name":"bob"}]`,
+			Op:       ".[1]|.name",
+			Expected: `"bob"`,
+		},
+		"pipe array operations": {
+			In:       `[["a","b","c"],["d","e","f"]]`,
+			Op:       ".[0]|.[1]",
+			Expected: `"b"`,
+		},
+		"pipe with range": {
+			In:       `{"items":["a","b","c","d"]}`,
+			Op:       ".items|.[1:2]",
+			Expected: `["b","c"]`,
+		},
+		"pipe mixed operations": {
+			In:       `{"users":[{"id":1},{"id":2}]}`,
+			Op:       ".users|.[0]|.id",
+			Expected: `1`,
+		},
+		"pipe with from": {
+			In:       `[{"a":1},{"a":2},{"a":3}]`,
+			Op:       ".[1:]|.[0]|.a",
+			Expected: `2`,
+		},
+		"pipe with b64_decode": {
 			In:       `{"hello":{"world":{"object":"ewogICAgICAgICJmaXJzdCI6ICJqb2UiCiAgICAgIH0="}}}`,
 			Op:       ".hello.world.object|b64_decode|.first",
 			Expected: `"joe"`,
+		},
+
+		// Error cases
+		"empty pipe segment": {
+			In:       `{"a":"value"}`,
+			Op:       ".a||.b",
+			HasError: true,
+		},
+		"pipe at start": {
+			In:       `{"a":"value"}`,
+			Op:       "|.a",
+			HasError: true,
+		},
+		"pipe at end": {
+			In:       `{"a":"value"}`,
+			Op:       ".a|",
+			HasError: true,
 		},
 	}
 
 	for label, tc := range testCases {
 		t.Run(label, func(t *testing.T) {
 			op, err := jq.Parse(tc.Op)
+			if tc.HasError {
+				// For error cases, we expect either Parse to fail or Apply to fail
+				if err != nil {
+					// Parse failed as expected
+					return
+				}
+				// Parse succeeded, check if Apply fails
+				_, err = op.Apply([]byte(tc.In))
+				if err == nil {
+					t.FailNow()
+				}
+				return
+			}
+
+			// For non-error cases, Parse should succeed
 			if err != nil {
 				t.FailNow()
 			}
 
 			data, err := op.Apply([]byte(tc.In))
-			if tc.HasError {
-				if err == nil {
-					t.FailNow()
-				}
-			} else {
-				if string(data) != tc.Expected {
-					t.FailNow()
-				}
-				if err != nil {
-					t.FailNow()
-				}
+			if string(data) != tc.Expected {
+				t.FailNow()
+			}
+			if err != nil {
+				t.FailNow()
 			}
 		})
 	}
