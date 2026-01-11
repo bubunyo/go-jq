@@ -105,19 +105,19 @@ func TestFindIndices(t *testing.T) {
 	}{
 		"simple": {
 			In:     "[0]",
-			Expect: []string{"0"},
+			Expect: []string{"[0]", "0", "", ""},
 		},
 		"range": {
 			In:     "[0:1]",
-			Expect: []string{"0"},
+			Expect: []string{"[0:1]", "0", ":", "1"},
 		},
 		"from": {
 			In:     "[1:]",
-			Expect: []string{"0"},
+			Expect: []string{"[1:]", "1", ":", ""},
 		},
 		"to": {
 			In:     "[:1]",
-			Expect: []string{"0"},
+			Expect: []string{"[:1]", "", ":", "1"},
 		},
 	}
 	for label, tc := range testCases {
