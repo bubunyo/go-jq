@@ -3,7 +3,7 @@ package jq_test
 import (
 	"testing"
 
-	"github.com/bubunyo/jq"
+	"github.com/bubunyo/go-jq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -3,7 +3,7 @@ package scanner_test
 import (
 	"testing"
 
-	"github.com/bubunyo/jq/scanner"
+	"github.com/bubunyo/go-jq/scanner"
 )
 
 func TestFindTo(t *testing.T) {

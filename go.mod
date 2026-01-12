@@ -1,4 +1,4 @@
-module github.com/bubunyo/jq
+module github.com/bubunyo/go-jq
 
 go 1.24.2
 

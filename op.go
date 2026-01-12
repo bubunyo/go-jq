@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bubunyo/jq/scanner"
+	"github.com/bubunyo/go-jq/scanner"
 )
 
 // Op defines a single transformation to be applied to a []byte

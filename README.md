@@ -15,7 +15,7 @@ Rather than marshalling JSON elements into Go structs, jq manipulates JSON as ra
 ## Installation
 
 ```bash
-go get github.com/bubunyo/jq
+go get github.com/bubunyo/go-jq
 ```
 
 ## Quick Start
@@ -25,7 +25,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bubunyo/jq"
+	"github.com/bubunyo/go-jq"
 )
 
 func main() {

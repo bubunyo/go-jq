@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/bubunyo/jq/scanner"
+	"github.com/bubunyo/go-jq/scanner"
 )
 
 func BenchmarkString(t *testing.B) {

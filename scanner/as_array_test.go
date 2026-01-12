@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/bubunyo/jq/scanner"
+	"github.com/bubunyo/go-jq/scanner"
 )
 
 func BenchmarkAsArray(t *testing.B) {
